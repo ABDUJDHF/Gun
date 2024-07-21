@@ -5,33 +5,40 @@ local tool = Instance.new("Tool")
 tool.Name = gunName
 tool.RequiresHandle = false
 
-local aimPart = Instance.new("Part")
-aimPart.Size = Vector3.new(0.2, 0.2, 0.2)
-aimPart.BrickColor = BrickColor.new("Bright red")
-aimPart.Material = Enum.Material.Neon
-aimPart.Anchored = true
-aimPart.CanCollide = false
-aimPart.Parent = workspace
-
-local function updateAim()
-aimPart.CFrame = player.Character.Head.CFrame * CFrame.new(0, 0, -50)
-end
-
-game:GetService("RunService").RenderStepped:Connect(updateAim)
-
-local function fireGunAtMouse(target)
-if target and target.Parent then
-local humanoid = target.Parent:FindFirstChild("Humanoid")
+local function killCharacter(character)
+local humanoid = character:FindFirstChild("Humanoid")
 if humanoid then
 humanoid.Health = 0
-humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-end
+humanoid:ChangeState(Enum.HumanoidStateType.Dead)
 end
 end
 
-tool.Activated:Connect(function()
-local mouse = player:GetMouse()
-fireGunAtMouse(mouse.Target)
+local function fireGun()
+local bullet = Instance.new("Part")
+bullet.Size = Vector3.new(0.5, 0.5, 0.5) -- زيادة حجم الرصاصة لتكون مرئية أكثر
+bullet.BrickColor = BrickColor.new("Bright blue")
+bullet.Material = Enum.Material.Neon
+bullet.Anchored = false
+bullet.CanCollide = false
+bullet.CFrame = player.Character.Head.CFrame
+bullet.Velocity = player.Character.Head.CFrame.LookVector * 300 -- زيادة سرعة الرصاصة
+bullet.Parent = workspace
+
+bullet.Touched:Connect(function(hit)
+local character = hit.Parent
+if character and character:IsA("Model") and character ~= player.Character then
+killCharacter(character)
+bullet:Destroy()
+end
 end)
+
+game:GetService("RunService").Stepped:Connect(function()
+bullet.Velocity = player.Character.Head.CFrame.LookVector * 300 -- تأكيد تحديث سرعة الرصاصة باستمرار
+end)
+
+game.Debris:AddItem(bullet, 30)
+end
+
+tool.Activated:Connect(fireGun)
 
 tool.Parent = player.Backpack

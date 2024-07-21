@@ -14,15 +14,23 @@ end
 end
 
 local function fireGun()
+local mouse = player:GetMouse()
 local bullet = Instance.new("Part")
 bullet.Size = Vector3.new(0.5, 0.5, 0.5) -- زيادة حجم الرصاصة لتكون مرئية أكثر
 bullet.BrickColor = BrickColor.new("Bright blue")
 bullet.Material = Enum.Material.Neon
 bullet.Anchored = false
 bullet.CanCollide = false
-bullet.CFrame = player.Character.Head.CFrame
-bullet.Velocity = player.Character.Head.CFrame.LookVector * 300 -- زيادة سرعة الرصاصة
+
+local torso = player.Character:FindFirstChild("Torso") or player.Character:FindFirstChild("UpperTorso")
+if torso then
+bullet.CFrame = CFrame.new(torso.Position, mouse.Hit.p) -- تحديد الاتجاه بناءً على الماوس والترس
+bullet.Velocity = (mouse.Hit.p - torso.Position).unit * 300 -- زيادة سرعة الرصاصة
 bullet.Parent = workspace
+
+game:GetService("RunService").Stepped:Connect(function()
+bullet.CFrame = bullet.CFrame + bullet.Velocity / 60 -- حركة مستمرة للرصاصة مع تحديث موقعها
+end)
 
 bullet.Touched:Connect(function(hit)
 local character = hit.Parent
@@ -32,11 +40,8 @@ bullet:Destroy()
 end
 end)
 
-game:GetService("RunService").Stepped:Connect(function()
-bullet.Velocity = player.Character.Head.CFrame.LookVector * 300 -- تأكيد تحديث سرعة الرصاصة باستمرار
-end)
-
-game.Debris:AddItem(bullet, 30)
+game.Debris:AddItem(bullet, 10)
+end
 end
 
 tool.Activated:Connect(fireGun)
